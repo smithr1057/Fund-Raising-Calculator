@@ -99,13 +99,15 @@ def currency(x):
 
 
 # Checks that users response is not blank
-def not_blank(question, ):
+def not_blank(question, error):
 
-    while True:
+    valid = False
+    while not valid:
         response = input(question)
 
         if response == "":
-            print("Sorry this can't be blank. Please try again")
+            print(f"{error}. \nPlease try again.\n")
+            continue
 
         else:
             return response
