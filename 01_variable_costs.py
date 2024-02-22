@@ -128,21 +128,19 @@ variable_dict = {
     "Price": price_list
 }
 
-item_name = not_blank("Item name: ")
+product_name = not_blank("Product name: ",
+                         "The product name can't be blank.")
 print()
 
-while True:
+# Loop to get component, quantity and price
+component = ''
+while component.lower() != "xxx":
 
     # Ask user for component
-    component = not_blank("Component name (or 'xxx' to quit): ")
-
-    # if user tries to quit before adding a component output error
-    if component == 'xxx' and len(component_list) > 0:
-        print()
+    component = not_blank("Component name: ",
+                          "The component name can't be blank.")
+    if component.lower() == 'xxx':
         break
-    elif component == 'xxx':
-        print("You must add at least ONE component before quitting")
-        continue
 
     # Get the number of components
     quantity = num_check("Quantity: ", "int", 0)
@@ -163,7 +161,8 @@ variable_frame = pandas.DataFrame(variable_dict)
 variable_frame = variable_frame.set_index('Component')
 
 # Calculate the cost for each component
-variable_frame['Cost'] = variable_frame['Quantity'] * variable_frame['Price']
+variable_frame['Cost'] = variable_frame['Quantity']\
+                         * variable_frame['Price']
 
 # Calculate overall cost
 total_cost = variable_frame['Cost'].sum()
@@ -173,10 +172,12 @@ add_dollars = ['Price', 'Cost']
 for var_item in add_dollars:
     variable_frame[var_item] = variable_frame[var_item].apply(currency)
 
-print(f'Item Name: {item_name}')
+# *** Printing Area ***
+
+print(f'Product: {product_name}')
 
 print(variable_frame)
+
 print()
 
-# Output variable costs
 print(f'Variable costs: {currency(total_cost)}')
