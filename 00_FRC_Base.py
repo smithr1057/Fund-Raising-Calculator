@@ -1,3 +1,6 @@
+import pandas
+
+
 # Functions
 # Lets you change color of printed text easily
 def color_text(text, color):
@@ -38,19 +41,11 @@ def num_check(question, num_type, low=None, high=None):
                 # Ask the question
                 response = input(question)
 
-                # Check if response is 'x'
-                if response.lower() == 'xxx':
-                    return response
-
                 # Convert the response to an integer
                 response = int(response)
             else:
                 # Ask the question
                 response = input(question)
-
-                # Check if response is 'xxx'
-                if response.lower() == 'xxx':
-                    return response
 
                 # Convert the response to a float
                 response = float(response)
@@ -64,7 +59,7 @@ def num_check(question, num_type, low=None, high=None):
 
             # Checks input is not too low
             elif situation == "low only":
-                if response < low:
+                if response <= low:
                     color_text(f"Please enter a number that is more than {low}", 'red')
                     continue
 
@@ -75,4 +70,114 @@ def num_check(question, num_type, low=None, high=None):
             continue
 
 
+# checks user answers with valid answer
+def string_checker(question, num_letters, valid_list):
+
+    error = f"Please choose {valid_list[0]} or {valid_list[1]}"
+
+    while True:
+
+        # Ask user for choice (and put it in lowercase)
+        response = input(question).lower()
+
+        # iterates through list and if response is an item
+        # in the list (or the first letter of an item), the
+        # full item name is returned
+
+        for i in valid_list:
+            if response == i[:num_letters] or response == i:
+                return i
+
+        # output error if item not in list
+        print(error)
+        print()
+
+
+# Currency formatting function
+def currency(x):
+    return f"${x:.2f}"
+
+
+# Checks that users response is not blank
+def not_blank(question, error):
+
+    valid = False
+    while not valid:
+        response = input(question)
+
+        if response == "":
+            print(f"{error}. \nPlease try again.\n")
+            continue
+
+        else:
+            return response
+
+
 # Main Routine
+
+# Set up lists and dictionaries
+
+component_list = []
+quantity_list = []
+price_list = []
+
+
+variable_dict = {
+    "Component": component_list,
+    "Quantity": quantity_list,
+    "Price": price_list
+}
+
+product_name = not_blank("Product name: ",
+                         "The product name can't be blank.")
+print()
+
+# Loop to get component, quantity and price
+component = ''
+while component.lower() != "xxx":
+
+    # Ask user for component
+    component = not_blank("Component name: ",
+                          "The component name can't be blank.")
+    if component.lower() == 'xxx':
+        break
+
+    # Get the number of components
+    quantity = num_check("Quantity: ", "int", 0)
+
+    # Get price per component
+    price = num_check("Price for a single component: $", "float", 0)
+    print()
+
+    # Add component, quantity and price to lists
+    component_list.append(component)
+    quantity_list.append(quantity)
+    price_list.append(price)
+
+# Create the table frame for our data
+variable_frame = pandas.DataFrame(variable_dict)
+
+# set index
+variable_frame = variable_frame.set_index('Component')
+
+# Calculate the cost for each component
+variable_frame['Cost'] = variable_frame['Quantity']\
+                         * variable_frame['Price']
+
+# Calculate overall cost
+total_cost = variable_frame['Cost'].sum()
+
+# Currency Formatting (using function)
+add_dollars = ['Price', 'Cost']
+for var_item in add_dollars:
+    variable_frame[var_item] = variable_frame[var_item].apply(currency)
+
+# *** Printing Area ***
+
+print(f'Product: {product_name}')
+
+print(variable_frame)
+
+print()
+
+print(f'Variable costs: {currency(total_cost)}')
