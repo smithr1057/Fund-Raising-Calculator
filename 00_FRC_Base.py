@@ -113,71 +113,111 @@ def not_blank(question, error):
             return response
 
 
+# Gets expenses, returns list which has
+# the data frame and sub-total
+def get_expenses(var_fixed):
+
+    # Set up lists and dictionaries
+    item_list = []
+    quantity_list = []
+    price_list = []
+
+    variable_dict = {
+        "Item": item_list,
+        "Quantity": quantity_list,
+        "Price": price_list
+    }
+
+    # Loop to get item, quantity and price
+    item_name = ''
+    while item_name.lower() != "xxx":
+
+        # Ask user for item
+        item_name = not_blank("Item name: ",
+                              "The item name can't be blank.")
+        if item_name.lower() == 'xxx':
+            break
+
+        if var_fixed == "variable":
+            # Get the number of items
+            quantity = num_check("Quantity: ", "int", 0)
+        else:
+            quantity = 1
+
+        # Get price per item
+        price = num_check("Price for a single item: $", "float", 0)
+        print()
+
+        # Add item, quantity and price to lists
+        item_list.append(item_name)
+        quantity_list.append(quantity)
+        price_list.append(price)
+
+    # Create the table frame for our data
+    expense_frame = pandas.DataFrame(variable_dict)
+
+    # set index
+    expense_frame = expense_frame.set_index('Item')
+
+    # Calculate the cost for each item
+    expense_frame['Cost'] = expense_frame['Quantity'] * expense_frame['Price']
+
+    # Calculate sub total
+    sub_total = expense_frame['Cost'].sum()
+
+    # Currency Formatting (using function)
+    add_dollars = ['Price', 'Cost']
+    for var_item in add_dollars:
+        expense_frame[var_item] = expense_frame[var_item].apply(currency)
+
+    return [expense_frame, sub_total]
+
+
+# Prints out data
+def expense_print(heading, frame, subtotal):
+    print()
+    print(f"**** {heading} Costs ****")
+    print(frame)
+    print()
+    print(f"{heading} Costs: {currency(subtotal)}")
+    return ''
+
+
 # Main Routine
-
-# Set up lists and dictionaries
-
-component_list = []
-quantity_list = []
-price_list = []
-
-
-variable_dict = {
-    "Component": component_list,
-    "Quantity": quantity_list,
-    "Price": price_list
-}
+# Lists
+yn_list = ['yes', 'no']
 
 product_name = not_blank("Product name: ",
                          "The product name can't be blank.")
 print()
 
-# Loop to get component, quantity and price
-component = ''
-while component.lower() != "xxx":
+print("Please enter your variable costs below...")
 
-    # Ask user for component
-    component = not_blank("Component name: ",
-                          "The component name can't be blank.")
-    if component.lower() == 'xxx':
-        break
+# Calculate variable costs
+variable_expenses = get_expenses("variable")
+variable_frame = variable_expenses[0]
+variable_sub = variable_expenses[1]
 
-    # Get the number of components
-    quantity = num_check("Quantity: ", "int", 0)
+fixed_frame = ''
 
-    # Get price per component
-    price = num_check("Price for a single component: $", "float", 0)
-    print()
+# Ask user if they have fixed costs
+fixed_costs = string_checker("Do you have fixed costs (y / n)? ", 1, yn_list)
 
-    # Add component, quantity and price to lists
-    component_list.append(component)
-    quantity_list.append(quantity)
-    price_list.append(price)
-
-# Create the table frame for our data
-variable_frame = pandas.DataFrame(variable_dict)
-
-# set index
-variable_frame = variable_frame.set_index('Component')
-
-# Calculate the cost for each component
-variable_frame['Cost'] = variable_frame['Quantity']\
-                         * variable_frame['Price']
-
-# Calculate overall cost
-total_cost = variable_frame['Cost'].sum()
-
-# Currency Formatting (using function)
-add_dollars = ['Price', 'Cost']
-for var_item in add_dollars:
-    variable_frame[var_item] = variable_frame[var_item].apply(currency)
+if fixed_costs == 'yes':
+    print("Please enter your fixed costs below...")
+    # Calculate fixed costs
+    fixed_expenses = get_expenses("fixed")
+    fixed_frame = fixed_expenses[0]
+    fixed_sub = fixed_expenses[1]
+else:
+    fixed_sub = 0
 
 # *** Printing Area ***
 
 print(f'Product: {product_name}')
-
-print(variable_frame)
-
 print()
 
-print(f'Variable costs: {currency(total_cost)}')
+expense_print('Variable', variable_frame, variable_sub)
+
+if fixed_costs == 'yes':
+    expense_print('Fixed', fixed_frame[['Cost']], fixed_sub)
