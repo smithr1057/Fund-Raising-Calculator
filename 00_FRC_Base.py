@@ -129,14 +129,18 @@ def get_expenses(var_fixed):
     }
 
     # Loop to get item, quantity and price
-    item_name = ''
-    while item_name.lower() != "xxx":
+    while True:
 
         # Ask user for item
         item_name = not_blank("Item name: ",
                               "The item name can't be blank.")
-        if item_name.lower() == 'xxx':
+
+        if item_name == 'xxx' and len(item_list) > 0:
+            print()
             break
+        elif item_name == 'xxx':
+            print("You must enter at least ONE cost")
+            continue
 
         if var_fixed == "variable":
             # Get the number of items
@@ -183,6 +187,73 @@ def expense_print(heading, frame, subtotal):
     return ''
 
 
+# Calculate the profit goal
+def profit_goal(total_costs):
+
+    # Initialise variable and error message
+    error = "Please enter a valid profit goal\n"
+
+    valid = False
+    while not valid:
+
+        # Ask for profit goal...
+        response = input("What is your profit goal (eg $500 or 50%) ")
+
+        # Check if first character is $...
+        if response[0] == '$':
+            profit_type = '$'
+            # Get amount (everything after the $)
+            amount = response[1:]
+
+        # Check if last character is %
+        elif response[-1] == '%':
+            profit_type = '%'
+            # Get amount (everything before the %)
+            amount = response[:-1]
+
+        else:
+            # Set response to amount for now
+            profit_type = 'unknown'
+            amount = response
+
+        try:
+            # Check amount is a number more than zero...
+            amount = float(amount)
+            if amount <= 0:
+                print(error)
+                continue
+
+        except ValueError:
+            print(error)
+            continue
+
+        if profit_type == "unknown" and amount >= 100:
+            dollar_type = string_checker(f'Do you mean {currency(amount)}. '
+                                         f'ie {amount:.2f} dollars? '
+                                         f'(y / n): ', 1, yn_list)
+
+            # Set profit type based on user answer above
+            if dollar_type == "yes":
+                profit_type = '$'
+            else:
+                profit_type = '%'
+
+        elif profit_type == 'unknown' and amount < 100:
+            percent_type = string_checker(f'Do you mean {amount}% (y / n): ',
+                                          1, yn_list)
+            if percent_type == "yes":
+                profit_type = "%"
+            else:
+                profit_type = '$'
+
+        # return profit goal to main routine
+        if profit_type == '$':
+            return amount
+        else:
+            goal = (amount / 100) * total_costs
+            return goal
+
+
 # Main Routine
 # Lists
 yn_list = ['yes', 'no']
@@ -201,7 +272,9 @@ variable_sub = variable_expenses[1]
 fixed_frame = ''
 
 # Ask user if they have fixed costs
-fixed_costs = string_checker("Do you have fixed costs (y / n)? ", 1, yn_list)
+fixed_costs = string_checker("Do you have fixed costs (y / n)? ",
+                             1, yn_list)
+print()
 
 if fixed_costs == 'yes':
     print("Please enter your fixed costs below...")
@@ -212,12 +285,21 @@ if fixed_costs == 'yes':
 else:
     fixed_sub = 0
 
+total_costs = fixed_sub + variable_sub
+
 # *** Printing Area ***
 
 print(f'Product: {product_name}')
-print()
 
 expense_print('Variable', variable_frame, variable_sub)
 
 if fixed_costs == 'yes':
     expense_print('Fixed', fixed_frame[['Cost']], fixed_sub)
+
+print(f"Overall Cost: {currency(fixed_sub + variable_sub)}")
+
+
+profit_target = profit_goal(total_costs)
+print(f"Profit Target: {currency(profit_target)}")
+print(f"Total Sales: {currency(total_costs + profit_target)}")
+print()
