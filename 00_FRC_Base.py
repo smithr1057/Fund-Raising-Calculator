@@ -1,4 +1,5 @@
 import pandas
+import math
 
 
 # Functions
@@ -188,7 +189,7 @@ def expense_print(heading, frame, subtotal):
 
 
 # Calculate the profit goal
-def profit_goal(total_costs):
+def profit_goal(total_cost):
 
     # Initialise variable and error message
     error = "Please enter a valid profit goal\n"
@@ -250,8 +251,13 @@ def profit_goal(total_costs):
         if profit_type == '$':
             return amount
         else:
-            goal = (amount / 100) * total_costs
+            goal = (amount / 100) * total_cost
             return goal
+
+
+# rounding function
+def round_up(amount, var_round_to):
+    return int(math.ceil(amount / var_round_to)) * var_round_to
 
 
 # Main Routine
@@ -260,6 +266,7 @@ yn_list = ['yes', 'no']
 
 product_name = not_blank("Product name: ",
                          "The product name can't be blank.")
+how_many = num_check('How many items will you be producing? ', 'int')
 print()
 
 print("Please enter your variable costs below...")
@@ -285,21 +292,42 @@ if fixed_costs == 'yes':
 else:
     fixed_sub = 0
 
-total_costs = fixed_sub + variable_sub
+# Work out total costs and profit target
+all_costs = fixed_sub + variable_sub
+profit_target = profit_goal(all_costs)
+
+# Calculates total sales needed to reach goal
+sales_needed = all_costs + profit_target
+
+# ask user for rounding
+round_to = num_check("Round to nearest...? $", 'int')
+
+# Calculates recommended price
+selling_price = sales_needed / how_many
+print(f"Selling Price (un-rounded): {currency(selling_price)}")
+
+recommended_price = round_up(selling_price, round_to)
 
 # *** Printing Area ***
 
-print(f'Product: {product_name}')
-
+print()
+print(f'**** Fund Raising - {product_name} ****')
+print()
 expense_print('Variable', variable_frame, variable_sub)
 
 if fixed_costs == 'yes':
     expense_print('Fixed', fixed_frame[['Cost']], fixed_sub)
 
-print(f"Overall Cost: {currency(fixed_sub + variable_sub)}")
-
-
-profit_target = profit_goal(total_costs)
-print(f"Profit Target: {currency(profit_target)}")
-print(f"Total Sales: {currency(total_costs + profit_target)}")
 print()
+print(f"**** Total Costs: {currency(all_costs)} ****")
+print()
+
+print()
+print('**** Profit & Sales Targets ****')
+print(f"Profit Target: {currency(profit_target)}")
+print(f"Total Sales: {currency(all_costs + profit_target)}")
+
+print()
+print('**** Pricing ****')
+print(f'Minimum Price: {currency(selling_price)}')
+print(f'Recommended Price: {currency(recommended_price)}')
