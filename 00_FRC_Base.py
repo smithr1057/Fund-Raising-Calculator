@@ -180,12 +180,9 @@ def get_expenses(var_fixed):
 
 # Prints out data
 def expense_print(heading, frame, subtotal):
-    print()
-    print(f"**** {heading} Costs ****")
-    print(frame)
-    print()
-    print(f"{heading} Costs: {currency(subtotal)}")
-    return ''
+    return f'**** {heading} Costs ****\n ' \
+           f'{frame}\n' \
+           f'{heading} Costs: {currency(subtotal)}'
 
 
 # Calculate the profit goal
@@ -279,11 +276,10 @@ variable_sub = variable_expenses[1]
 fixed_frame = ''
 
 # Ask user if they have fixed costs
-fixed_costs = string_checker("Do you have fixed costs (y / n)? ",
-                             1, yn_list)
+fixed_yn = string_checker("Do you have fixed costs (y / n)? ", 1, yn_list)
 print()
 
-if fixed_costs == 'yes':
+if fixed_yn == 'yes':
     print("Please enter your fixed costs below...")
     # Calculate fixed costs
     fixed_expenses = get_expenses("fixed")
@@ -304,30 +300,56 @@ round_to = num_check("Round to nearest...? $", 'int')
 
 # Calculates recommended price
 selling_price = sales_needed / how_many
-print(f"Selling Price (un-rounded): {currency(selling_price)}")
 
 recommended_price = round_up(selling_price, round_to)
 
+print()
+
 # *** Printing Area ***
+fixed_txt = ''
 
-print()
-print(f'**** Fund Raising - {product_name} ****')
-print()
-expense_print('Variable', variable_frame, variable_sub)
+product_heading = f'**** Fund Raising - {product_name} ****\n'
 
-if fixed_costs == 'yes':
-    expense_print('Fixed', fixed_frame[['Cost']], fixed_sub)
+variable_txt = expense_print('Variable', variable_frame, variable_sub)
 
-print()
-print(f"**** Total Costs: {currency(all_costs)} ****")
-print()
+fixed_costs = ""
 
-print()
-print('**** Profit & Sales Targets ****')
-print(f"Profit Target: {currency(profit_target)}")
-print(f"Total Sales: {currency(all_costs + profit_target)}")
+if fixed_yn == 'yes':
+    fixed_txt = expense_print('Fixed', fixed_frame[['Cost']], fixed_sub)
+    fixed_txt = pandas.DataFrame.to_string(fixed_frame)
+    fixed_costs = f"Fixed Costs: {currency(fixed_sub)}"
 
-print()
-print('**** Pricing ****')
-print(f'Minimum Price: {currency(selling_price)}')
-print(f'Recommended Price: {currency(recommended_price)}')
+# Change dataframes to strings
+variable_txt = pandas.DataFrame.to_string(variable_frame)
+
+variable_costs = f"Variable Costs {currency(variable_sub)}"
+
+
+overall_costs = f"\n**** Total Costs: {currency(all_costs)} ****\n"
+
+
+profit_target_sales = f'**** Profit & Sales Targets ****\n ' \
+                      f'Profit Target: {currency(profit_target)}\n ' \
+                      f'Total Sales: {currency(all_costs + profit_target)}\n'
+
+pricing = f'**** Pricing ****\n ' \
+          f'Minimum Price: {currency(selling_price)}\n ' \
+          f'Recommended Price: {currency(recommended_price)}\n'
+
+to_write = [product_heading, variable_txt, variable_costs, fixed_txt, fixed_costs, overall_costs,
+            profit_target_sales, pricing]
+
+# Write to file...
+# create file to hold data (add .txt extension
+file_name = f'{product_name}.txt'
+text_file = open(file_name, 'w+')
+
+# Heading
+for item in to_write:
+    print(item)
+    print()
+    text_file.write(item)
+    text_file.write("\n\n")
+
+# close file
+text_file.close()
